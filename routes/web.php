@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Livewire\Admin\Users;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,5 +23,9 @@ Route::view('dashboard', 'dashboard')
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
+
+Route::middleware(['auth'])->group(function () {
+Route::get('/admin/users', Users::class)->name('admin.users');
+});
 
 require __DIR__.'/auth.php';
