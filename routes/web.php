@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Livewire\Admin\Users;
+use App\Http\Livewire\TaskManager;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +27,8 @@ Route::view('profile', 'profile')
 
 Route::middleware(['auth'])->group(function () {
 Route::get('/admin/users', Users::class)->name('admin.users');
+Route::get('/admin/tasks', TaskManager::class)->name('admin.tasks');
+
 });
 
 require __DIR__.'/auth.php';

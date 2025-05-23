@@ -36,6 +36,9 @@ new class extends Component
                     <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.users')" wire:navigate>
                         {{ __('Manage Users') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('admin.tasks')" :active="request()->routeIs('admin.tasks')" wire:navigate>
+                        {{ __('Manage Tasks') }}
+                    </x-nav-link>
                 </div>
                    
             </div>
