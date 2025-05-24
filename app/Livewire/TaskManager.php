@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Livewire;
+namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Task;
@@ -11,6 +11,7 @@ class TaskManager extends Component
 {
     public $tasks = [];
     public $users = [];
+
     protected $rules = [
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
@@ -21,18 +22,22 @@ class TaskManager extends Component
     ];
 
     public $title, $description, $priority = 'medium', $status = 'todo', $deadline, $user_id;
-    public $taskId, $isModalOpen = false, $updateMode = false;
+    public $taskId, $updateMode = false;
 public $filterStatus = '';
 public $filterPriority = '';
 public $selectedTasks = [];
 public $selectAll = false;
+public $showModal = false;
+public $showDeleteModal = false;
+
+public $editMode = false;
+
 
     public function mount()
     {
         $this->loadTasks();
-        // $this->users = User::role('user')->get();
-        $users = new User();
-       $this->users =  $users->role('user')->get();
+        $usersQuery = new User();
+        $this->users = $usersQuery->newQuery()->role('user')->get();
     }
 
     public function loadTasks()
@@ -42,37 +47,36 @@ public $selectAll = false;
             : Task::with('user')->where('user_id', Auth::id())->orderByRaw("FIELD(priority, 'high', 'medium', 'low')")->get();
     }
 
-    public function openModal()
-    {
-        $this->resetForm();
-        $this->isModalOpen = true;
-    }
-
-    public function closeModal()
-    {
-        $this->resetForm();
-        $this->isModalOpen = false;
-    }
-
     public function resetForm()
     {
         $this->reset(['title', 'description', 'priority', 'status', 'deadline', 'user_id', 'taskId', 'updateMode']);
     }
+public function openModal()
+{
+    $this->resetForm();
+    $this->showModal = true;  // was $isModalOpen = true;
+}
+public function closeModal()
+{
+    $this->resetForm();
+    $this->showModal = false; // was $isModalOpen = false;
+}
 
-    public function edit($id)
-    {
-        $task = Task::findOrFail($id);
-        $this->taskId = $task->id;
-        $this->title = $task->title;
-        $this->description = $task->description;
-        $this->priority = $task->priority;
-        $this->status = $task->status;
-        $this->deadline = $task->deadline;
-        $this->user_id = $task->user_id;
+// In edit method:
+public function edit($id)
+{
+    $task = Task::findOrFail($id);
+    $this->taskId = $task->id;
+    $this->title = $task->title;
+    $this->description = $task->description;
+    $this->priority = $task->priority;
+    $this->status = $task->status;
+    $this->deadline = $task->deadline;
+    $this->user_id = $task->user_id;
 
-        $this->updateMode = true;
-        $this->isModalOpen = true;
-    }
+    $this->updateMode = true;
+    $this->showModal = true;  // was $isModalOpen = true;
+}
 
     public function save()
     {
@@ -107,12 +111,14 @@ public $selectAll = false;
     session()->flash('message', 'Selected tasks marked as completed.');
 }
 
+
 public function bulkDelete()
 {
     Task::whereIn('id', $this->selectedTasks)->delete();
     $this->selectedTasks = [];
-    session()->flash('message', 'Selected tasks deleted.');
+    session()->flash('message', 'Tasks deleted successfully.');
 }
+
 public function render()
 {
     $query = Task::query();

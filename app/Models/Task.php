@@ -17,6 +17,10 @@ class Task extends Model
         'deadline',
     ];
 
+    protected $casts = [
+        'deadline' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

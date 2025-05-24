@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Livewire\Admin\Users;
-use App\Http\Livewire\TaskManager;
+use App\Livewire\Admin\Users;
+use App\Livewire\TaskManager;
 
 /*
 |--------------------------------------------------------------------------
