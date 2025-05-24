@@ -1,12 +1,10 @@
 <div class="max-w-5xl mx-auto py-8 px-4">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex justify-between items-center">
-        User Management
-        <button wire:click="openFormModal" 
-            class="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
-            + Create User
-        </button>
-
-    </h2>
+<div class="flex flex-row items-center justify-end gap-4 mb-6 w-full">
+    <button wire:click="openFormModal" 
+        class="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+        + Create User
+    </button>
+</div>
 
     @if (session()->has('message'))
         <div class="mb-6 flex items-center justify-between p-4 rounded-md bg-green-100 border border-green-300 text-green-800 shadow-sm">
@@ -66,34 +64,42 @@
 
     <!-- Users table below -->
     <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded-md shadow-md">
-            <thead class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                <tr>
-                    <th class="py-3 px-6 text-left">Name</th>
-                    <th class="py-3 px-6 text-left">Email</th>
-                    <th class="py-3 px-6 text-left">Role</th>
-                    <th class="py-3 px-6 text-left">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="text-gray-700">
-                @foreach($users as $user)
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="py-3 px-6">{{ $user->name }}</td>
-                        <td class="py-3 px-6">{{ $user->email }}</td>
-                        <td class="py-3 px-6">{{ $user->role->name ?? 'N/A' }}</td>
-                        <td class="py-3 px-6 space-x-2">
-                            <button wire:click="edit({{ $user->id }})"
-                                class="text-yellow-600 hover:text-yellow-800 font-semibold">Edit</button>
-
-                            <button wire:click="confirmDelete({{ $user->id }})"
-                                class="text-red-600 px-3 py-1 rounded hover:text-red-700">
-                                Delete
-                            </button>
-                        </td>
+        @if($users && $users->count())
+            <table class="min-w-full bg-white rounded-md shadow-md">
+                <thead class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                    <tr>
+                        <th class="py-3 px-6 text-left">Name</th>
+                        <th class="py-3 px-6 text-left">Email</th>
+                        <th class="py-3 px-6 text-left">Role</th>
+                        <th class="py-3 px-6 text-left">Actions</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody class="text-gray-700">
+                    @foreach($users as $user)
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-3 px-6">{{ $user->name }}</td>
+                            <td class="py-3 px-6">{{ $user->email }}</td>
+                            <td class="py-3 px-6">{{ $user->role->name ?? 'N/A' }}</td>
+                            <td class="py-3 px-6 space-x-2">
+                                <button wire:click="edit({{ $user->id }})"
+                                    class="text-yellow-600 hover:text-yellow-800 font-semibold">Edit</button>
+
+                                <button wire:click="confirmDelete({{ $user->id }})"
+                                    class="text-red-600 px-3 py-1 rounded hover:text-red-700">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="mt-4">
+                {{ $users->links() }}
+            </div>
+        @else
+            <p>No users found.</p>
+        @endif
     </div>
 
     <!-- confirmation modal -->

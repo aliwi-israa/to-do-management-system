@@ -8,9 +8,14 @@ use App\Models\User;
 use Illuminate\Validation\Rule;
 use  App\Events\TaskUpdated;
 use App\Notifications\TaskUpdatedNotification;
+use Livewire\WithPagination;
 
 class TaskManager extends Component
 {
+    use WithPagination;
+    
+    public $page = 1;
+    public $perPage = 10;
     public $users = [];
 
     public $title = '';
@@ -42,6 +47,7 @@ class TaskManager extends Component
         'user_id' => 'required|exists:users,id',
         'deadline' => 'nullable|date',
     ];
+    protected $paginationTheme = 'tailwind';
     protected $listeners = ['deleteTaskConfirmed'];
 
 
@@ -136,11 +142,13 @@ class TaskManager extends Component
 
     public function updatedFilterStatus()
     {
+        $this->resetPage();
         $this->reset(['selectedRows', 'selectPageRows']);
     }
 
     public function updatedFilterPriority()
     {
+        $this->resetPage();
         $this->reset(['selectedRows', 'selectPageRows']);
     }
 
@@ -220,7 +228,7 @@ class TaskManager extends Component
 
     public function render()
     {
-        $tasks = $this->filteredTasks()->get();
+        $tasks = $this->filteredTasks()->paginate(10);
 
         return view('livewire.task-manager', [
             'tasks' => $tasks,

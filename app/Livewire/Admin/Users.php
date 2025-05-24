@@ -5,24 +5,24 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use App\Models\User;
 use App\Models\Role;
-use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Cache;
+use Livewire\WithPagination;
 
 class Users extends Component
 {
-    public $users, $name, $email, $role_id, $password, $user_id, $userId;
+    use WithPagination;
+
+    public $page = 1;
+    public $perPage = 10;
+    public $name, $email, $role_id, $password, $user_id, $userId;
     public $updateMode = false;
     public $showFormModal = false;
     public $confirmingUserDeletion = false;
     public $deleteUserId = null;
 
+    protected $paginationTheme = 'tailwind';
     protected $listeners = ['deleteUserConfirmed'];
 
-    public function render()
-    {
-        $this->users = User::with('role')->latest()->get();
-        return view('livewire.admin.users', ['roles' => Role::all()])
-                    ->layout('components.layouts.app');
-    }
 
     public function resetInputFields()
     {
@@ -34,6 +34,21 @@ class Users extends Component
         $this->updateMode = false;
     }
 
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+    public function openFormModal()
+    {
+        $this->resetInputFields();
+        $this->updateMode = false;
+        $this->showFormModal = true;
+    }
+
+    public function closeFormModal()
+    {
+        $this->showFormModal = false;
+    }
     public function store()
     {
         $this->validate([
@@ -54,19 +69,7 @@ class Users extends Component
             $this->closeFormModal();
 
         $this->resetInputFields();
-    }
-
-
-    public function openFormModal()
-    {
-        $this->resetInputFields();
-        $this->updateMode = false;
-        $this->showFormModal = true;
-    }
-
-    public function closeFormModal()
-    {
-        $this->showFormModal = false;
+        Cache::flush(); // Clear cache after create
     }
 
     public function edit($id)
@@ -100,6 +103,7 @@ class Users extends Component
         session()->flash('message', 'User updated successfully.');
         $this->closeFormModal();
         $this->resetInputFields();
+        Cache::flush(); // Clear cache after create
     }
 
 
@@ -114,6 +118,22 @@ class Users extends Component
         User::findOrFail($this->deleteUserId)->delete();
         $this->confirmingUserDeletion = false;
         session()->flash('message', 'User deleted successfully.');
+    }
+
+   
+    public function render()
+    {
+
+        $users = User::with('role')
+            ->latest()
+            ->paginate($this->perPage);
+
+        $roles = Cache::remember('roles_list', now()->addHours(1), fn () => Role::all());
+
+        return view('livewire.admin.users', [
+            'users' => $users,
+            'roles' => $roles,
+        ])->layout('components.layouts.app');
     }
 
 }

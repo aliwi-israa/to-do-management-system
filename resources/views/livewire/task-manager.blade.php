@@ -66,6 +66,7 @@
     @endif
 </div>
 
+@if($tasks && $tasks->count())
     <div class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-200 rounded-md">
             <thead>
@@ -121,8 +122,14 @@
             </tbody>
         </table>
     </div>
+    <div class="mt-4">
+    {{ $tasks->links() }}
+    </div>
+@else
+    <p>No users found.</p>
+@endif
 
-    {{-- Create/Edit Modal --}}
+{{-- Create/Edit Modal --}}
 @if ($showModal)
 <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xl">
@@ -212,26 +219,26 @@
 </div>
 @endif
 
-    {{-- Delete Confirmation Modal --}}
-    @if ($confirmingTaskDeletion)
-    <!-- confirmation modal -->
-        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-                <h2 class="text-xl font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
-                <p class="text-gray-700">Are you sure you want to delete this Task?</p>
+{{-- Delete Confirmation Modal --}}
+@if ($confirmingTaskDeletion)
+<!-- confirmation modal -->
+    <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Confirm Deletion</h2>
+            <p class="text-gray-700">Are you sure you want to delete this Task?</p>
 
-                <div class="mt-6 flex justify-end gap-3">
-                    <button wire:click="$set('confirmingTaskDeletion', false)"
-                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
-                        Cancel
-                    </button>
-                    <button wire:click="deleteTask"
-                        class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
-                        Yes, Delete
-                    </button>
-                </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button wire:click="$set('confirmingTaskDeletion', false)"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
+                    Cancel
+                </button>
+                <button wire:click="deleteTask"
+                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
+                    Yes, Delete
+                </button>
             </div>
         </div>
-    @endif
+    </div>
+@endif
 
 </div>
