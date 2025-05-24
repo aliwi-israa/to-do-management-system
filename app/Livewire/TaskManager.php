@@ -6,6 +6,8 @@ use Livewire\Component;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Validation\Rule;
+use  App\Events\TaskUpdated;
+use App\Notifications\TaskUpdatedNotification;
 
 class TaskManager extends Component
 {
@@ -85,7 +87,7 @@ class TaskManager extends Component
     {
         $this->validate();
 
-        Task::updateOrCreate(
+        $task = Task::updateOrCreate(
             ['id' => $this->taskId],
             [
                 'title' => $this->title,
@@ -99,6 +101,27 @@ class TaskManager extends Component
 
         session()->flash('message', $this->taskId ? 'Task updated.' : 'Task created.');
         $this->closeModal();
+
+        $currentUser = auth()->user();
+
+        if ($currentUser->hasRole('user')) {
+            // trigger event
+            event(new TaskUpdated($task));
+            // Notify all admins if a normal user edited the task
+            $admins = new User();
+            $admins = $admins->newQuery()->role('admin')->get();
+
+            foreach ($admins as $admin) {
+                $admin->notify(new TaskUpdatedNotification($task, 'Task Status has been updated'));
+            }
+        } elseif ($currentUser->hasRole('admin')) {
+            //trigger event 
+            event(new TaskUpdated($task));
+            //fire nontification
+            $user = User::find($task->user_id);
+            $user->notify(new TaskUpdatedNotification($task,  $this->taskId ? 'a Task assigned to you has been updated.' : 'a Task was created for you.'));
+        }
+        
     }
 
     public function updatedSelectPageRows($value)
