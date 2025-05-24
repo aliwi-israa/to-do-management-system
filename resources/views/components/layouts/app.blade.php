@@ -20,46 +20,6 @@
             {{ $slot }}
         </div>
         @livewireScripts
-<!-- <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script> -->
-<script src="https://cdn.jsdelivr.net/gh/livewire/sortable@v1.x.x/dist/livewire-sortable.js"></script>
-
-<script>
-    // new Sortable(document.getElementById('task-list'), {handle:'.cursor-move'});
-
-    // function initSortable() {
-    //     const el = document.getElementById('task-list');
-    //     if (!el) return;
-
-    //     // Destroy previous Sortable instance if it exists
-    //     if (el.sortableInstance) {
-    //         el.sortableInstance.destroy();
-    //     }
-
-    //     // Create new Sortable instance and store reference on DOM
-    //     el.sortableInstance = new Sortable(el, {
-    //         animation: 150,
-    //         handle: '.cursor-move',
-    //         onEnd: function () {
-    //             let ids = Array.from(el.children)
-    //                 .filter(row => row.dataset.id)
-    //                 .map(item => item.dataset.id);
-    //             Livewire.emit('updateOrder', ids);
-    //         }
-    //     });
-    // }
-
-    // document.addEventListener('livewire:load', function () {
-    //     initSortable();
-    // });
-
-    // // Always re-init after Livewire updates the DOM
-    // document.addEventListener('DOMContentLoaded', function () {
-    //     if (window.Livewire) {
-    //         window.Livewire.hook('message.processed', () => {
-    //             initSortable();
-    //         });
-    //     }
-    // });
-</script>
+        <script src="https://cdn.jsdelivr.net/gh/livewire/sortable@v1.x.x/dist/livewire-sortable.js"></script>
     </body>
 </html>

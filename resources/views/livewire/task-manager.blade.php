@@ -42,11 +42,13 @@
             </button>
             <div x-show="open" @click.away="open = false"
                  class="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-lg z-10">
-                <a wire:click.prevent="bulkDelete"
-                   href="#"
-                   class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
-                    Delete Selected
-                </a>
+                @if(auth()->user()->hasRole('admin'))
+                    <a wire:click.prevent="bulkDelete"
+                    href="#"
+                    class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                        Delete Selected
+                    </a>
+                @endif
                 <a wire:click.prevent="bulkComplete"
                    href="#"
                    class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">
@@ -57,9 +59,11 @@
     @endif
 
     {{-- Create Task Button --}}
-    <button wire:click="openModal" class="ml-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-        + Create Task
-    </button>
+    @if(auth()->user()->hasRole('admin'))
+        <button wire:click="openModal" class="ml-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            + Create Task
+        </button>
+    @endif
 </div>
 
     <div class="overflow-x-auto">
@@ -99,10 +103,12 @@
                                 class="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 text-sm">
                                 Edit
                             </button>
-                            <button wire:click="confirmDelete({{ $task->id }})"
-                                class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
-                                Delete
-                            </button>
+                            @if(auth()->user()->hasRole('admin'))
+                                <button wire:click="confirmDelete({{ $task->id }})"
+                                    class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+                                    Delete
+                                </button>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -117,67 +123,94 @@
     </div>
 
     {{-- Create/Edit Modal --}}
-    @if ($showModal)
-        <div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
-            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xl">
-                <h2 class="text-lg font-bold mb-6">{{ $editMode ? 'Edit Task' : 'Create Task' }}</h2>
-                    <div>
-                        <label for="title" class="block font-semibold text-gray-700 mb-1">Title</label>
-                        <input type="text" wire:model.defer="title" id="title" class="form-input w-full border-gray-300 rounded-md" />
-                        @error('title') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div>
-                        <label for="description" class="block font-semibold text-gray-700 mb-1">Description</label>
-                        <textarea wire:model.defer="description" id="description" class="form-textarea w-full border-gray-300 rounded-md" rows="3"></textarea>
-                        @error('description') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="flex flex-row justify-between">
-                        <div style="width:45%">
-                        <label for="user_id" class="block font-semibold text-gray-700 mb-1">Assign To</label>
-                        <select wire:model.defer="user_id" id="user_id" class="form-select w-full border-gray-300 rounded-md">
-                            <option value="">-- Select User --</option>
-                            @foreach ($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('user_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                                        <div style="width:45%">
-                        <label for="priority" class="block font-semibold text-gray-700 mb-1">Priority</label>
-                        <select wire:model.defer="priority" id="priority" class="form-select w-full border-gray-300 rounded-md">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                        @error('priority') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
+@if ($showModal)
+<div class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-xl">
+        @if(auth()->user()->hasRole('user'))
+            <h2 class="text-lg font-bold mb-6">{{ 'Edit Task Status: ' . $title }}</h2>
+        @else
+            <h2 class="text-lg font-bold mb-6">{{ $editMode ? 'Edit Task' : 'Create Task' }}</h2>
+        @endif
+    
+        @if(auth()->user()->hasRole('user'))
+            {{-- Only allow editing status for users --}}
+            <div>
+                <label for="status" class="block font-semibold text-gray-700 mb-1">Status</label>
+                <select wire:model.defer="status" id="status" class="form-select w-full border-gray-300 rounded-md">
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                @error('status') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            </div>
+        @else
+            {{-- Full form for admins/managers --}}
+            <div>
+                <label for="title" class="block font-semibold text-gray-700 mb-1">Title</label>
+                <input type="text" wire:model.defer="title" id="title" class="form-input w-full border-gray-300 rounded-md" />
+                @error('title') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            </div>
+            <div>
+                <label for="description" class="block font-semibold text-gray-700 mb-1">Description</label>
+                <textarea wire:model.defer="description" id="description" class="form-textarea w-full border-gray-300 rounded-md" rows="3"></textarea>
+                @error('description') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="flex flex-row justify-between">
+                <div style="width:45%">
+                    <label for="user_id" class="block font-semibold text-gray-700 mb-1">Assign To</label>
+                    <select wire:model.defer="user_id" id="user_id" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">-- Select User --</option>
+                        @foreach ($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('user_id') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
-                <div class="flex flex-row justify-between">
-                    <div style="width:45%">
-                        <label for="status" class="block font-semibold text-gray-700 mb-1">Status</label>
-                        <select wire:model.defer="status" id="status" class="form-select w-full border-gray-300 rounded-md">
-                            <option value="todo">To Do</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                        @error('status') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                    <div style="width:45%">
-                        <label for="deadline" class="block font-semibold text-gray-700 mb-1">Deadline</label>
-                        <input type="datetime-local" wire:model.defer="deadline" id="deadline" class="form-input w-full border-gray-300 rounded-md" />
-                        @error('deadline') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
-                    </div>
-                </div>
-                <div class="flex justify-end space-x-2 mt-4">
-                    <button wire:click="$set('showModal', false)" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-                    <button wire:click="save" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        {{ $editMode ? 'Update Task' : 'Create Task' }}
-                    </button>
+                <div style="width:45%">
+                    <label for="priority" class="block font-semibold text-gray-700 mb-1">Priority</label>
+                    <select wire:model.defer="priority" id="priority" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                    @error('priority') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
                 </div>
             </div>
+
+            <div class="flex flex-row justify-between">
+                <div style="width:45%">
+                    <label for="status" class="block font-semibold text-gray-700 mb-1">Status</label>
+                    <select wire:model.defer="status" id="status" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    @error('status') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                </div>
+                <div style="width:45%">
+                    <label for="deadline" class="block font-semibold text-gray-700 mb-1">Deadline</label>
+                    <input type="datetime-local" wire:model.defer="deadline" id="deadline" class="form-input w-full border-gray-300 rounded-md" />
+                    @error('deadline') <span class="text-red-600 text-sm">{{ $message }}</span> @enderror
+                </div>
+            </div>
+        @endif
+
+        <div class="flex justify-end space-x-2 mt-4">
+            <button wire:click="$set('showModal', false)" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+            <button wire:click="save" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    @if(auth()->user()->hasRole('user'))
+                        Change status
+                    @else
+                        {{ $editMode ? 'Update Task' : 'Create Task' }}
+                    @endif
+            </button>
         </div>
-    @endif
+    </div>
+</div>
+@endif
 
     {{-- Delete Confirmation Modal --}}
     @if ($confirmingTaskDeletion)

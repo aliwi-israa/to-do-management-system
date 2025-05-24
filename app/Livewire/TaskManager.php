@@ -11,17 +11,26 @@ class TaskManager extends Component
 {
     public $users = [];
 
-    public $title = '', $description = '', $priority = 'medium', $status = 'todo', $deadline, $user_id;
-    public $taskId, $updateMode = false;
+    public $title = '';
+    public $description = '';
+    public $priority = 'medium';
+    public $status = 'todo';
+    public $deadline;
+    public $user_id;
+
+    public $taskId;
+    public $updateMode = false;
+    public $editMode = false;
+    public $showModal = false;
 
     public $filterStatus = '';
     public $filterPriority = '';
+
     public $selectedRows = [];
     public $selectPageRows = false;
-    public $showModal = false;
-    public $showDeleteModal = false;
-    public $editMode = false;
-    protected $listeners = ['updateTaskOrder', 'deleteTaskConfirmed'];
+
+    public $confirmingTaskDeletion = false;
+    public $deleteTaskId = null;
 
     protected $rules = [
         'title' => 'required|string|max:255',
@@ -31,23 +40,13 @@ class TaskManager extends Component
         'user_id' => 'required|exists:users,id',
         'deadline' => 'nullable|date',
     ];
+    protected $listeners = ['deleteTaskConfirmed'];
 
-
-
-        public $confirmingTaskDeletion = false;
-    public $deleteTaskId = null;
 
     public function mount()
     {
         $usersQuery = new User();
         $this->users = $usersQuery->newQuery()->role('user')->get();
-    }
-
-    public function updateTaskOrder($orderedIds)
-    {
-        foreach ($orderedIds as $index => $id) {
-            Task::where('id', $id)->update(['sort_order' => $index]);
-        }
     }
 
     public function resetForm()
@@ -102,32 +101,6 @@ class TaskManager extends Component
         $this->closeModal();
     }
 
-    public function confirmDelete($id)
-    {
-        $this->deleteTaskId = $id;
-        $this->confirmingTaskDeletion = true;
-    }
-
-    public function deleteTask()
-    {
-        Task::findOrFail($this->deleteTaskId)->delete();
-        $this->confirmingTaskDeletion = false;
-        session()->flash('message', 'Task deleted successfully.');
-    }
-    public function bulkComplete()
-    {
-        Task::whereIn('id', $this->selectedRows)->update(['status' => 'completed']);
-        $this->reset(['selectedRows', 'selectPageRows']);
-        session()->flash('message', 'Selected tasks marked as completed.');
-    }
-
-    public function bulkDelete()
-    {
-        Task::whereIn('id', $this->selectedRows)->delete();
-        $this->reset(['selectedRows', 'selectPageRows']);
-        session()->flash('message', 'Tasks deleted successfully.');
-    }
-
     public function updatedSelectPageRows($value)
     {
         if ($value) {
@@ -148,36 +121,83 @@ class TaskManager extends Component
         $this->reset(['selectedRows', 'selectPageRows']);
     }
 
-protected function filteredTasks()
-{
-    $query = Task::query();
+    protected function filteredTasks()
+    {
+        $userId = auth()->id();
 
-    if ($this->filterStatus) {
-        $query->where('status', $this->filterStatus);
-    }
-    if ($this->filterPriority) {
-        $query->where('priority', $this->filterPriority);
-    }
-    $query->orderBy('sort_order');
+        $query = Task::query();
 
-    if (auth()->user()?->isAdmin()) {
+        if ($this->filterStatus) {
+            $query->where('status', $this->filterStatus);
+        }
+        if ($this->filterPriority) {
+            $query->where('priority', $this->filterPriority);
+        }
+
+        if (auth()->user()?->isAdmin()) {
+            // admin can sees ALL tasks
+            $query->leftJoin('task_orders', function ($join) use ($userId) {
+                    $join->on('tasks.id', '=', 'task_orders.task_id')
+                        ->where('task_orders.user_id', '=', $userId);
+                })
+                ->orderByRaw('task_orders.sort_order IS NULL, task_orders.sort_order ASC') // NULL last
+                ->select('tasks.*');
+        } else {
+            // make user sees only his own tasks
+            $query->where('tasks.user_id', $userId)
+                ->leftJoin('task_orders', function ($join) use ($userId) {
+                    $join->on('tasks.id', '=', 'task_orders.task_id')
+                        ->where('task_orders.user_id', '=', $userId);
+                })
+                ->orderByRaw('task_orders.sort_order IS NULL, task_orders.sort_order ASC')
+                ->select('tasks.*');
+        }
+
         return $query;
-    } else {
-        return $query->where('user_id', auth()->id());
     }
-}
 
+    public function updateOrder($orderedIds)
+    {
+        $userId = auth()->id();
 
-public function updateOrder($orderedIds)
-{
-foreach ($orderedIds as $item) {
-    Task::where('id', $item['value'])->update(['sort_order' => $item['order']]);
-}
+        foreach ($orderedIds as $item) {
+            \DB::table('task_orders')->updateOrInsert(
+                ['user_id' => $userId, 'task_id' => $item['value']],
+                ['sort_order' => $item['order'], 'updated_at' => now()]
+            );
+        }
+    }
 
-}
+    public function confirmDelete($id)
+    {
+        $this->deleteTaskId = $id;
+        $this->confirmingTaskDeletion = true;
+    }
+
+    public function deleteTask()
+    {
+        Task::findOrFail($this->deleteTaskId)->delete();
+        $this->confirmingTaskDeletion = false;
+        session()->flash('message', 'Task deleted successfully.');
+    }
+
+    public function bulkComplete()
+    {
+        Task::whereIn('id', $this->selectedRows)->update(['status' => 'completed']);
+        $this->reset(['selectedRows', 'selectPageRows']);
+        session()->flash('message', 'Selected tasks marked as completed.');
+    }
+
+    public function bulkDelete()
+    {
+        Task::whereIn('id', $this->selectedRows)->delete();
+        $this->reset(['selectedRows', 'selectPageRows']);
+        session()->flash('message', 'Tasks deleted successfully.');
+    }
+
     public function render()
     {
-        $tasks = $this->filteredTasks()->orderBy('sort_order')->get();
+        $tasks = $this->filteredTasks()->get();
 
         return view('livewire.task-manager', [
             'tasks' => $tasks,

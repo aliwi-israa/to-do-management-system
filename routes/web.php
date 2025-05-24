@@ -25,10 +25,11 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
-Route::middleware(['auth'])->group(function () {
-Route::get('/admin/users', Users::class)->name('admin.users');
-Route::get('/admin/tasks', TaskManager::class)->name('admin.tasks');
-
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', Users::class)->name('users');
 });
+
+// tasks route for both admin and regular users
+Route::middleware(['auth'])->get('/tasks', TaskManager::class)->name('tasks');
 
 require __DIR__.'/auth.php';

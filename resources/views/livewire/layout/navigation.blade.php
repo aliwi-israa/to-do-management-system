@@ -33,12 +33,21 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.users')" wire:navigate>
-                        {{ __('Manage Users') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('admin.tasks')" :active="request()->routeIs('admin.tasks')" wire:navigate>
-                        {{ __('Manage Tasks') }}
-                    </x-nav-link>
+                    @auth
+                        @if(auth()->user()->hasRole('admin'))
+                            <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.users')" wire:navigate>
+                                {{ __('Manage Users') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('tasks')" :active="request()->routeIs('tasks')" wire:navigate>
+                                {{ __('Manage Tasks') }}
+                            </x-nav-link>
+                        @else
+                            <x-nav-link :href="route('tasks')" :active="request()->routeIs('tasks')" wire:navigate>
+                                {{ __('Manage My Tasks') }}
+                            </x-nav-link>
+                        @endif
+                    @endauth
+
                 </div>
                    
             </div>
