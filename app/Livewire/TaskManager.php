@@ -167,9 +167,17 @@ protected function filteredTasks()
     }
 }
 
+
+public function updateOrder($orderedIds)
+{
+foreach ($orderedIds as $item) {
+    Task::where('id', $item['value'])->update(['sort_order' => $item['order']]);
+}
+
+}
     public function render()
     {
-        $tasks = $this->filteredTasks()->get();
+        $tasks = $this->filteredTasks()->orderBy('sort_order')->get();
 
         return view('livewire.task-manager', [
             'tasks' => $tasks,

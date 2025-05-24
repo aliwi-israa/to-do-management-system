@@ -78,15 +78,15 @@
                     <th class="w-40 px-3 py-3 text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody id="task-list">
+            <tbody id="task-list" wire:sortable="updateOrder">
+                
                 @foreach ($tasks as $task)
-                    <tr wire:key="task-{{ $task->id }}" data-id="{{ $task->id }}" class="border-b hover:bg-gray-50">
+
+                    <tr  wire:sortable.item="{{ $task->id }}" wire:key="task-{{ $task->id }}" data-id="{{ $task->id }}" class="border-b hover:bg-gray-50">
                         <td class="text-center">
                             <input wire:model.live="selectedRows" type="checkbox" value="{{ $task->id }}">
                         </td>
-                        <td class="cursor-move text-center text-gray-400 select-none px-3" wire:ignore>
-                            ☰
-                        </td>
+                        <td wire:sortable.handle class="cursor-move" >☰</td>  
                         <td class="px-3 py-2">{{ $task->title }}</td>
                         <td class="px-3 py-2">{{ $task->user->name ?? '-' }}</td>
                         <td class="px-3 py-2 capitalize">{{ $task->priority }}</td>
